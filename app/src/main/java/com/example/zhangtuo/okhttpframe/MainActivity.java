@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Cache;
+import okhttp3.CacheControl;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -33,7 +34,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void initView() {
         findViewById(R.id.get_cache).setOnClickListener(this);
         findViewById(R.id.post).setOnClickListener(this);
-        findViewById(R.id.get_no_cache).setOnClickListener(this);
+        findViewById(R.id.get_service_no_cache).setOnClickListener(this);
+        findViewById(R.id.get_official_cache).setOnClickListener(this);
 
         tvContent = (TextView) findViewById(R.id.content);
     }
@@ -48,12 +50,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.post:
                 postRequest();
                 break;
-            case R.id.get_no_cache:
+            case R.id.get_service_no_cache:
                 getNoCacheRequest();
+                break;
+            case R.id.get_official_cache:
+                getOfficialCacheRequest();
                 break;
             default:
                 break;
         }
+    }
+
+    /**
+     * 如果项目中不同的模块需要进行不同的缓存配置，设置不同的缓存时间
+     *
+     * okhttp中建议用CacheControl这个类来进行缓存策略的制定
+     */
+    private void getOfficialCacheRequest() {
+        File cacheFile = new File(getExternalCacheDir().toString(),"cache");
+        int cacheSize = 10 * 1024 * 1024;
+        final Cache cache = new Cache(cacheFile,cacheSize);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                OkHttpClient client = new OkHttpClient.Builder()
+                        .cache(cache)
+                        .build();
+                //设置缓存时间为60秒
+                CacheControl cacheControl = new CacheControl.Builder()
+                        .maxAge(60, TimeUnit.SECONDS)
+                        .build();
+                Request request = new Request.Builder()
+                        .url("http://blog.csdn.net/briblue")
+                        .cacheControl(cacheControl)
+                        .build();
+
+                try {
+                    Response response = client.newCall(request).execute();
+
+                    response.body().close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     /**
