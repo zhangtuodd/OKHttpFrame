@@ -33,6 +33,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="get_official_cache" />
+        <Button
+            android:id="@+id/add_intercept_log"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="add_intercept_log" />
         <TextView
             android:id="@+id/content"
             android:layout_width="match_parent"

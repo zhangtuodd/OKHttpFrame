@@ -30,4 +30,8 @@ dependencies {
 
     compile 'com.squareup.okhttp3:okhttp:3.8.0'
 
+    //使用okhttp网络日志拦截器：
+    compile 'com.squareup.okhttp3:logging-interceptor:3.5.0'
+
+
 }

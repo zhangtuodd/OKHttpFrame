@@ -19,6 +19,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.logging.HttpLoggingInterceptor;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.post).setOnClickListener(this);
         findViewById(R.id.get_service_no_cache).setOnClickListener(this);
         findViewById(R.id.get_official_cache).setOnClickListener(this);
+        findViewById(R.id.add_intercept_log).setOnClickListener(this);
 
         tvContent = (TextView) findViewById(R.id.content);
     }
@@ -56,9 +58,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.get_official_cache:
                 getOfficialCacheRequest();
                 break;
+            case R.id.add_intercept_log:
+                addInterceptLog();
+                break;
             default:
                 break;
         }
+    }
+
+    /**
+     * 添加拦截器过滤拦截器在执行时，可以先对请求的 Request 对象进行修改；再得到响应的 Response 对象之后，可以进行修改之后再返回。
+     *
+     * 打印请求和返回信息
+     */
+    private void addInterceptLog() {
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(new HttpLogger());
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(15,TimeUnit.SECONDS)
+                .addInterceptor(loggingInterceptor)
+                .build();
+        Request request = new Request.Builder()
+                .url("http://news.at.zhihu.com/api/4/news/before/20170606")
+                .build();
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, final IOException e) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        tvContent.setText(e.toString());
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                Log.i("tag", "response body  :" + response.body().string());
+                Log.i("tag", "response cache  :" + response.cacheResponse());
+                Log.i("tag", "response netWork  :" + response.networkResponse());
+            }
+        });
     }
 
     /**
